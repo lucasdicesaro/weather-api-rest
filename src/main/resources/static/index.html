@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Weather</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+	<form id="login-form">
+	    <div class="form-group">
+		  <label for="username">Usuario</label>
+		  <input type="text" id="username" class="form-control" />
+		</div>
+		<div class="form-group">
+		  <label for="password">Contraseña</label>
+		  <input type="password" id="password" class="form-control" />
+		</div>
+		<p id="messages"></p>
+		<button type="button" id="loginButton" class="btn btn-primary" onclick="login();">Ingresar</button>
+		<button type="button" id="addButton" class="btn btn-primary" onclick="register();">Registrar</button>
+	</form>
+</body>
+<script>
+
+	function login() {
+		var username = document.getElementById('username');
+		request('users/retrieve?username=' + username.value, function(err, response) {
+			if (err) {
+			    const responseJson = JSON.parse(response)
+				var messages = document.getElementById('messages');
+				messages.innerText = responseJson.message;
+				return;
+			}
+			console.log('response: ' + response);
+			window.location.href = 'locations.html?userId=' + response;
+		});
+	}
+
+	function register() {
+		var username = document.getElementById('username');
+		var password = document.getElementById('password');
+
+		if (username.value == '' || password.value == '') {
+			var messages = document.getElementById('messages');
+			messages.innerText = 'Debe ingresar un usuario y una contraseña';
+			return
+		}
+
+		requestPOST('users/add', 'username=' + username.value + '&password=' + password.value, function(err, response) {
+			if (err) {
+			    const responseJson = JSON.parse(response)
+				var messages = document.getElementById('messages');
+				messages.innerText = responseJson.message;
+				return;
+			}
+
+			login();
+		});
+	}
+
+
+	function request(url, callback) {
+		const xhr = new XMLHttpRequest();
+		xhr.timeout = 2000;
+		xhr.onreadystatechange = function(e) {
+			if (xhr.readyState === 4) {
+				if (xhr.status === 200) {
+					callback(null, xhr.response)
+				} else {
+					callback(xhr.status, xhr.response)
+				}
+			}
+		}
+		xhr.ontimeout = function () {
+			console.log('Timeout')
+			var messages = document.getElementById('messages');
+			messages.innerText = 'Timeout';
+		}
+		xhr.open('get', url, true)
+		xhr.send();
+	}
+
+	
+	function requestPOST(url, params, callback) {
+		var http = new XMLHttpRequest();
+		http.open("POST", url, true);
+		http.timeout = 2000;
+		//Send the proper header information along with the request
+		http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		http.onreadystatechange = function(e) {//Call a function when the state changes.
+			if (http.readyState === 4) {
+				if (http.status === 200) {
+					callback(null, http.response)
+				} else {
+					callback(http.status, http.response)
+				}
+			}
+		}
+		http.ontimeout = function () {
+			console.log('Timeout')
+			var messages = document.getElementById('messages');
+			messages.innerText = 'Timeout';
+		}
+		http.send(params);
+	}
+</script>
+</html>

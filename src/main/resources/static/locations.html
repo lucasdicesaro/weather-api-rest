@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Weather</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+	<form id="location-form">
+	    <div class="form-group">
+		  <label for="locationNames">Localidades</label>
+	      <p id="locationNames"></p>
+		</div>
+	    <div class="form-group">
+		  <label for="locationName">Localidad</label>
+		  <input type="text" id="locationName" class="form-control" />
+		</div>
+		<p id="messages"></p>
+		<button type="button" class="btn btn-primary" onclick="addLocationName();">Agregar</button>
+		<button type="button" class="btn btn-primary" onclick="dashboard();">Dashboard</button>
+	</form>
+</body>
+<script>
+
+	var userId;
+	function processForm() {
+		var parameters = location.search.substring(1).split("&");
+		var temp = parameters[0].split("=");
+		userId = unescape(temp[1]);
+		allLocationNames(userId);
+	}
+	processForm();
+	
+	function allLocationNames(userId) {
+		request('locations/' + userId, function(err, response) {
+		    const responseJson = JSON.parse(response)
+			if (err) {
+				var messages = document.getElementById('messages');
+				messages.innerText = responseJson.message;
+				return;
+			}
+			console.log('response: ' + responseJson);
+			//window.location.href = 'dashboards/' + response;
+			var locationNamesDiv = document.getElementById('locationNames');
+			var html = '<lu>'
+			for (var i = 0; i < responseJson.length; i++) {
+				var removeFunction = "removeLocationName('" + responseJson[i] + "')";
+				html += '<li>' + responseJson[i] + ' <a href="#" onclick="' + removeFunction + '">Remover</a></li>';
+			}
+			html += '</lu>'
+			locationNamesDiv.innerHTML = html;
+		});
+	}
+
+	function addLocationName() {
+		var locationName = document.getElementById('locationName');
+
+		if (locationName.value == '') {
+			var messages = document.getElementById('messages');
+			messages.innerText = 'Debe ingresar una localidad';
+			return
+		}
+
+		requestPOST('locations/add', 'locationName=' + locationName.value + '&userId=' + userId, function(err, response) {
+			if (err) {
+			    const responseJson = JSON.parse(response)
+				var messages = document.getElementById('messages');
+				messages.innerText = responseJson.message;
+				return;
+			}
+
+			allLocationNames(userId);
+			locationName.value = '';
+		});
+	}
+
+	function removeLocationName(locationName) {
+		requestPOST('locations/remove', 'locationName=' + locationName + '&userId=' + userId, function(err, response) {
+			if (err) {
+			    const responseJson = JSON.parse(response)
+				var messages = document.getElementById('messages');
+				messages.innerText = responseJson.message;
+				return;
+			}
+
+			allLocationNames(userId);
+		});
+	}
+
+	function dashboard() {
+		window.location.href = 'dashboard.html?userId=' + userId;
+	}
+
+	function request(url, callback) {
+		const xhr = new XMLHttpRequest();
+		xhr.timeout = 2000;
+		xhr.onreadystatechange = function(e) {
+			if (xhr.readyState === 4) {
+				if (xhr.status === 200) {
+					callback(null, xhr.response)
+				} else {
+					callback(xhr.status, xhr.response)
+				}
+			}
+		}
+		xhr.ontimeout = function () {
+			console.log('Timeout')
+			var messages = document.getElementById('messages');
+			messages.innerText = 'Timeout';
+		}
+		xhr.open('get', url, true)
+		xhr.send();
+	}
+
+	
+	function requestPOST(url, params, callback) {
+		var http = new XMLHttpRequest();
+		http.open("POST", url, true);
+		http.timeout = 2000;
+		//Send the proper header information along with the request
+		http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		http.onreadystatechange = function(e) {//Call a function when the state changes.
+			if (http.readyState === 4) {
+				if (http.status === 200) {
+					callback(null, http.response)
+				} else {
+					callback(http.status, http.response)
+				}
+			}
+		}
+		http.ontimeout = function () {
+	        console.log('Timeout')
+			var messages = document.getElementById('messages');
+			messages.innerText = 'Timeout';
+		}
+		http.send(params);
+	}
+
+</script>
+</html>

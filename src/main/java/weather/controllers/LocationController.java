@@ -35,10 +35,6 @@ public class LocationController {
 			new Exception("getUserLocations.UserId '" + userId + "' doesn't exist")
 		);		
 		List<String> locationNames = user.getLocations().stream().map(Location::getLocationName).collect(Collectors.toList());
-		
-//		UserLocationsDTO userLocationsDTO = new UserLocationsDTO();
-//		userLocationsDTO.setUserId(userId);
-//		userLocationsDTO.setLocationNames(locationNames);
 		return locationNames;
 	}
 	

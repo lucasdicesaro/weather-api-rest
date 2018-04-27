@@ -25,15 +25,18 @@
 	function allLocationNames(userId) {
 		request('locations/' + userId, function(err, locationNames) {
 		    const locationNamesJson = JSON.parse(locationNames)
+			var messages = document.getElementById('messages');
 			if (err) {
-				var messages = document.getElementById('messages');
 				messages.innerText = locationNamesJson.message;
 				return;
 			}
-			console.log('locationNamesJson: ' + locationNamesJson);
-			locationNamesJson.forEach(function(locationName) {
-				request("https://query.yahooapis.com/v1/public/yql?q=select location,item.condition from weather.forecast where woeid in (select woeid from geo.places(1) where text='" + locationName + "') and u='c'&format=json", handleLocationWeather);
-			})
+		    if (locationNamesJson.length > 0) {
+				locationNamesJson.forEach(function(locationName) {
+					request("https://query.yahooapis.com/v1/public/yql?q=select location,item.condition from weather.forecast where woeid in (select woeid from geo.places(1) where text='" + locationName + "') and u='c'&format=json", handleLocationWeather);
+				})		    	
+		    } else {
+				messages.innerText = 'No hay localidades';
+		    }
 		});
 	}
 	

@@ -42,7 +42,7 @@ public class LocationController {
 	public @ResponseBody String addNewDashboard(@RequestParam String locationName, @RequestParam Integer userId) throws Exception {
 		Optional<User> optional = userRepository.findById(userId);
 		optional.ifPresent(user -> {
-			Location location = locationRepository.findByLocationName(locationName);
+			Location location = locationRepository.findByLocationNameAndUserId(locationName, userId);
 			if (location == null) {
 				location = new Location();
 				location.setUser(user);
@@ -50,7 +50,8 @@ public class LocationController {
 				locationRepository.save(location);
 			} else {
 				// TODO use custom exception and a wrapper method 
-				throw new RuntimeException("addNewDashboard.locationName '" + locationName + "' already exists");
+				throw new RuntimeException(
+						"addNewDashboard.locationName '" + locationName + "'|userId '" + userId + "' already exists");
 			}
 		});
 		optional.orElseThrow(() -> 
@@ -65,12 +66,12 @@ public class LocationController {
 	public @ResponseBody String addRemoveDashboard(@RequestParam String locationName, @RequestParam Integer userId) throws Exception {
 		Optional<User> optionalUser = userRepository.findById(userId);
 		optionalUser.ifPresent(user -> {
-			Location location = locationRepository.findByLocationName(locationName);
+			Location location = locationRepository.findByLocationNameAndUserId(locationName, userId);
 			if (location != null) {
 				locationRepository.delete(location);
 			} else {
 				// TODO use custom exception and a wrapper method 
-				throw new RuntimeException("addRemoveDashboard.locationName '" + locationName + "' doesn't exist");
+				throw new RuntimeException("addRemoveDashboard.locationName '" + locationName + "'|userId '" + userId + "'' doesn't exist");
 			}
 		});
 		optionalUser.orElseThrow(() -> 
